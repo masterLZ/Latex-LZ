@@ -5,6 +5,15 @@
 \usepackage{hyperref}%导入包
 \usepackage{graphicx}%导入图片包
 \usepackage[b5paper]{geometry}%定义大小
+%改变字体背景颜色需要color和framed宏包
+\usepackage{framed}
+\usepackage{color}% 导入颜色
+\usepackage{underscore}%取消下划线识别
+\definecolor{shadecolor}{rgb}{0.92,0.92,0.92}
+%自定义函数
+\def\CodingInline#1{\colorbox{shadecolor}{\color{black}#1}}%内联代码
+\def\CodingBlock#1{\begin{shaded} \noindent#1 \end{shaded}}
+\def\Emphasize#1{\textcolor[rgb]{1,0,0}{#1}}
 %正文区
 %begin end 用于指定环境
 \begin{document}
@@ -29,11 +38,170 @@
     %正文
    本文基于\LaTeX 排版学习笔记\cite{LaTex排版学习笔记}和知乎搜集资料
    \cite{知乎Ref1,知乎Ref2}编写，属于第一版。
-
+    \newpage
     \section{软件环境}
-    软件需要最新版的VsCode\cite{Vscode网址}和TexLive\cite{TexLive网址}。
-    同时VsCode需要安装插件LaTex Workshop。
+    软件需要最新版的VsCode\cite{Vscode网址}和TexLive\cite{TexLive网址}.同时VsCode需要安装插件LaTex Workshop。
     \section{VsCode配置}
+    一般安装后使用默认配置就可以使用，搭配自带的Vscode tab 浏览器就可以实现文件编译，实时查看和正反向搜索。但是本着折腾一次就折腾明白的原则，叨叨一下一些基本的配置。
+    \subsection{快捷键}
+        只替换了编译键，其他常用键列在表格里面。
+        \begin{table}[htbp]
+            \centering
+            \caption{快捷键}
+            \begin{tabular}{|c|ccc|c|}
+            
+                \hline
+                功能 & 原始快捷键 & \, & 修改快捷键 &备注\\
+                \hline
+                编译文件 & Ctrl+Alt+B & $\Rightarrow$ & Ctrl+B & \\
+                \hline
+                预览PDF & Ctrl+Alt+V & $\Rightarrow$ & - & -为不修改\\
+                \hline
+                切换编译方式 & Ctrl+r & $\Rightarrow$ & - & -为不修改\\
+                \hline
+                正向搜索 & Ctrl+Alt+j & $\Rightarrow$ & - & 从tex到PDF\\
+                \hline        
+
+            \end{tabular}
+        \end{table}
+
+    \subsection{setting.json设置}
+        \subsubsection{通用设置}
+            %设置背景颜色
+            % \colorbox{red}{\color{black}红底黑字}
+            % \fcolorbox{red}{green}{红框绿背景} %框色+背景色
+            \begin{shaded}
+                %\noindent 本段取消首航缩进
+                \noindent "latex-workshop.showContextMenu":true,         //打开右键菜单
+                \\"latex-workshop.intellisense.package.enabled": true,  //根据加载的包，自动完成命令或包  
+                \\"latex-workshop.latex.autoBuild.run": "never",        //禁止保存文件时自动编译
+                \\"latex-workshop.latex.clean.fileTypes": [  //设定清理文件的类型 
+                \\"*.aux","*.bbl", "*.blg", "*.idx", "*.ind", "*.lof", "*.lot", "*.out", "*.toc", "*.acn", "*.acr", "*.alg", "*.glg", "*.glo", "*.gls", "*.ist", "*.fls", "*.log", "*.nav", *.snm", "*.synctex.gz", *.fdb_latexmk" 
+                \\],  
+            \end{shaded}
+
+        \subsubsection{指定编译器}
+        具体编译过程需要翻看LaTex-Workshop的英文编译文档\cite{Latex-Workshop-Compile}，这里只对常用设置进行说明.        
+        
+        LaTeX-Workshop中，编译LaTeX文件执行顺序的命令成为LaTeX recipes。在默认情况下由\CodingInline{latex-workshop.latex.recipes}和\CodingInline{latex-workshop.latex.Tools}来定义。
+
+        LaTeX-Workshop默认编译方式为\CodingInline{latex}和\CodingInline{padlatex}。如下方式修改了latex workshop的编译方式和辅助文件。添加xelatex和bib编译。
+
+        打开用户设置\CodingInline{setting.json}，首先设置\CodingInline{latex-workshop.latex.recipes}.
+        \CodingBlock{"latex-workshop.latex.recipes": [ \\ 
+            \{  \\
+              "name": "latexmk",  \\
+              "tools": [  \\
+                "latexmk"  \\
+              ]  \\
+            \},  \\
+            \{  \\
+              "name": "PDFlatex",  \\
+              "tools": [  \\
+              "pdflatex"  \\
+              ]  \\
+            \},  \\
+            \{  \\
+              "name": "pdflatex ->bibtex ->pdflatex2",  \\
+              "tools": [  \\
+                "pdflatex", \\ 
+                "bibtex",  \\
+                "pdflatex",  \\
+                "pdflatex"  \\
+              ]  \\
+            \},  \\
+            \{  \\
+              "name": "xelatex",\\  
+              "tools": [  \\
+                "xelatex"  \\
+              ]  \\
+            \},  \\
+            \{  \\
+              "name": "xelatex -> bibtex -> xelatex",  \\
+              "tools": [  \\
+                "xelatex",  \\
+                "bibtex",  \\
+                "xelatex",  \\
+              ]  \\
+            \}  \\
+          ],  }
+          接着设置\CodingInline{latex-workshop.latex.tools}
+          \CodingBlock{"latex-workshop.latex.tools":[  \\
+          \{  \\
+            "name": "latexmk",  \\
+            "command": "latexmk",  \\
+            "args": [  \\
+              "-synctex=1",  \\
+              "-interaction=nonstopmode",  \\
+              "-file-line-error",  \\
+              "-pdf",  \\
+              "-outdir=%OUTDIR%",  \\
+              "%DOC%"  \\
+            ],  \\
+            "env": \{\}  \\
+            \},  \\
+            \{  \\
+            "name": "pdflatex",  \\
+            "command": "pdflatex",  \\
+            "args": [  \\
+              "-synctex=1",  \\
+              "-interaction=nonstopmode",  \\
+              "-file-line-error",  \\
+              "%DOC%"  \\
+            ],  \\
+            "env": \{\}  \\
+            \},  \\
+            \{  \\
+            "name": "xelatex",  \\
+            "command": "xelatex",  \\
+            "args": [  \\
+              "-synctex=1",  \\
+              "-interaction=nonstopmode",  \\
+              "-file-line-error",  \\
+              "%DOC%"  \\
+            ],  \\
+            "env": \{\}  \\
+            \},  \\
+            \{  \\
+            "name": "bibtex",  \\
+            "command": "bibtex",  \\
+            "args": [  \\
+              "%DOCFILE%"  \\
+            ],  \\
+            "env": \{\}  \\
+            \}  \\
+            ],  }
+        \subsubsection{外部浏览器和正反向设置}
+        外部浏览器主要选用SumatraPDF，主要原因是打开速度非常快，可以提供快速预览，也可以复制出任意多个文件进行任意配置.
+        
+        首先配置默认外部pdf阅读器,这里我的SumatraPDF的路径是D:/Program Files/SumatraPDF/SumatraPDF.exe"
+        \CodingBlock{"latex-workshop.view.pdf.viewer":"external",    //pdf文件的预览方式\\
+        "latex-workshop.view.pdf.ref.viewer": "external",
+        //设置外部预览器\\
+        "latex-workshop.view.pdf.external.viewer.command":"D:/Program Files/SumatraPDF/SumatraPDF.exe",\\
+        "latex-workshop.view.pdf.external.viewer.args":[
+            "\%PDF\%"
+        ],}
+        接着设置正向搜索这里需要一个配置文件路径，我这里是D:/Program Files/Microsoft VS Code/resources/app/out/cli.js。根据自己的\CodingInline{cli.js}路径来进行修改
+        \CodingBlock{"latex-workshop.view.pdf.external.synctex.command": "D:/Program Files/SumatraPDF/SumatraPDF.exe",\\
+        "latex-workshop.view.pdf.external.synctex.args": [\\
+          "-forward-search",\\
+          "\%TEX\%",\\
+          "\%LINE\%",\\
+          "-reuse-instance",\\
+          "-inverse-search",\\
+          "code \textbackslash"D:/Program Files/Microsoft VS Code/resources/app/out/cli.js\textbackslash" -r -g \textbackslash"\%f:\%l\textbackslash",\\
+          "\%PDF\%"\\
+        ],}
+        接着设置反向搜索，在SumatraPDF设置选项中输入
+        \CodingBlock{"C:\textbackslash Program Files\textbackslash Microsoft VS Code\textbackslash Code.exe" "C:\textbackslash Program Files\textbackslash Microsoft VS Code\textbackslash resources\textbackslash app\textbackslash out\textbackslash cli.js" -g "\%f":\%l}
+
+        \section{结语}
+        本次配置大部分采用默认配置，下次更新会更新每个参数具体含义，进行更为详细的配置。
+
+
+
+
     
 
 
@@ -42,12 +210,13 @@
     \begin{thebibliography}{123456}%这个123456是文献最大长度
         \bibitem{LaTex排版学习笔记} LaTex排版学习笔记,Zoho,2013,10,14
         \bibitem{知乎Ref1} \url{https://zhuanlan.zhihu.com/p/106167792?utm_source=wechat_session&utm_medium=social&utm_oi=619471395880960}
-        VS CODE+LATEX 完全解决方案（2020年）
+        \newline VsCode+\LaTeX 完全解决方案（2020年）
         \bibitem{知乎Ref2} \url{https://zhuanlan.zhihu.com/p/90526218}
-        配置VScode编辑LaTeX及正反向搜索等设置
+        \newline 配置VScode编辑\LaTeX 及正反向搜索等设置
         \bibitem{Vscode网址}  \url{https://code.visualstudio.com}
         \bibitem{TexLive网址} \url{http://tug.org/texlive/acquire-netinstall.html}
-        %使用XeTex编译时不能使用中文编辑\bibitem
+        \bibitem{Latex-Workshop-Compile} \url{https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#latex-recipes}
+
     \end{thebibliography}
 
 \end{document}
